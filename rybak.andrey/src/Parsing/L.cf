@@ -21,3 +21,4 @@ EInt.    Exp8 ::= Integer ;
 terminator Exp "";
 coercions Exp 8 ;
 
+position token PIdent (letter | '_' ) (letter | digit | '_' )* ;
