@@ -1,3 +1,7 @@
+-- Prog. Program ::= [Decl] ;
+-- DVar. Decl ::= [PIdent] ":" LType ;
+-- DFuncDecl. Decl ::= "def" PIdent ":" LType ;
+-- DFuncDef. Decl ::= PIdent "(" [PIdent] ")" "{" [Stm] "}" ;
 TVoid. LType2 ::= "void" ;
 TInt. LType2 ::= "int" ;
 TFunType. LType1 ::= LType2 "->" LType1 ;
@@ -6,7 +10,7 @@ coercions LType 2 ;
 -- SFunDecl. Stm ::= PIdent ":" LType ;
 
 -- SVarDecl . Stm ::= LType [PIdent] ;
--- separator  nonempty Ident "," ;
+-- separator  nonempty PIdent "," ;
 
 SAss.    Stm  ::= PIdent "=" Exp ;
 SPrint.  Stm  ::= "print" Exp;
