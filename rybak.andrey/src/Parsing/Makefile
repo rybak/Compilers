@@ -14,11 +14,11 @@ LexL.x : ParL.y
 	echo "Doing nothing for LexL.x. Depends on\n\t$^"
 
 
-test : test.hs all
-	ghc test.hs
+repl : repl.hs all
+	ghc repl.hs
 
-runtest : test
-	./test
+runrepl : repl
+	./repl
 
 clean :
 	rm -f *.bak

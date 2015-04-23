@@ -1,4 +1,16 @@
--- EAss.    Exp  ::= PIdent "=" Exp ;
+TVoid. LType2 ::= "void" ;
+TInt. LType2 ::= "int" ;
+TFunType. LType1 ::= LType2 "->" LType1 ;
+coercions LType 2 ;
+
+-- SFunDecl. Stm ::= PIdent ":" LType ;
+
+-- SVarDecl . Stm ::= LType [PIdent] ;
+-- separator  nonempty Ident "," ;
+
+SAss.    Stm  ::= PIdent "=" Exp ;
+SPrint.  Stm  ::= "print" Exp;
+
 -- EOr.     Exp1 ::= Exp1 "||" Exp2 ;
 -- EAnd.    Exp2 ::= Exp2 "&&" Exp3 ;
 -- EEq.     Exp3 ::= Exp3 "==" Exp4 ;
@@ -14,11 +26,12 @@ EDiv.    Exp6 ::= Exp6 "/" Exp7 ;
 -- ENeg.    Exp7 ::= "!" Exp6 ;
 ENegInt. Exp7 ::= "-" Exp6 ;
 -- ECall.   Exp8 ::= PIdent  "(" [Exp] ")" ;
--- EVar.    Exp8 ::= PIdent ;
+EVar.    Exp8 ::= PIdent ;
 EInt.    Exp8 ::= Integer ;
 -- EBool.   Exp8 ::= BoolT ;
 
 terminator Exp "";
 coercions Exp 8 ;
+terminator Stm ";";
 
 position token PIdent (letter | '_' ) (letter | digit | '_' )* ;

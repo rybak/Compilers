@@ -1,11 +1,15 @@
 import Prelude
 import System.IO
+import qualified Data.Map.Strict as Map
+import Data.List (isPrefixOf)
+
+import Control.Monad.Trans
+import System.Console.Haskeline
 
 import AbsL
-import ParL (pExp)
-import LexL (tokens)
+import ParL (pExp, pStm, pLType)
+import LexL (tokens, Token)
 import qualified ErrM
-import qualified Data.Map.Strict as Map
 
 type Ident = String
 type Environment = Map.Map Ident Integer
@@ -44,23 +48,51 @@ eval env (EVar (PIdent ((p1,p2),ident))) = case Map.lookup ident env of
                           Just x -> Ok x
                           Nothing -> Error $ "Name error: " ++ ident
 -- eval env (EAss ident expr) = case eval env expr of
- --                          Error s -> Error $ "Can't assign '" ++ ident ++ "': " ++ s
  --                          Ok x -> 
 eval _ _ = Error "Not implemented operation."
 
-parse = pExp . tokens
+parseExp = pExp . tokens
+parseStm = pStm . tokens
+parseType = pLType . tokens
 
-repl :: Environment -> IO ()
-repl env = do
-  putStr "> "
-  hFlush stdout
-  s <- getLine
-  case s of
-    "quit" -> return ()
-    _ -> do
-      putStrLn $ case parse s of
-        ErrM.Ok e  -> s ++ " = " ++ (show e)
-        ErrM.Bad s -> "Error: " ++ s
-      repl env
+data ReplCommand = Statement String | Expr String | Type String
 
-main = repl Map.empty
+specialPrefix = " "
+typePrefix = ":t "
+parseReplCmd s
+--  | s == "quit"             = Quit
+  | specialPrefix `isPrefixOf` s = Expr $ drop (length specialPrefix) s
+  | typePrefix `isPrefixOf` s = Type $ drop (length typePrefix) s
+  | otherwise               = Statement s
+
+myerror :: String -> String
+myerror = (++) "Error: "
+--printExp :: Environment -> String -> IO ()
+printExp env s = outputStrLn $ case parseExp s of
+  ErrM.Ok e  -> s ++ " = " ++ (show $ eval env e)
+  ErrM.Bad s -> myerror s
+
+-- printType :: String -> IO ()
+printType s = outputStrLn $ case parseType s of
+  ErrM.Ok t  -> s ++ " ~ " ++ (show t)
+  ErrM.Bad s -> myerror s
+
+varName :: PIdent -> String
+varName (PIdent ((_,_), s)) = s
+
+main = runInputT defaultSettings (repl Map.empty) where
+  repl env = do
+    minput <- getInputLine "> "
+    case minput of
+      Nothing -> outputStrLn "Goodbye."
+      Just s -> case parseReplCmd s of
+        Statement stm -> case parseStm stm of
+          ErrM.Ok (SAss v e) -> case eval env e of
+            Ok n -> repl (Map.insert (varName v) n env)
+            Error s -> (outputStrLn $ "Can't assign '" ++ (varName v) ++ "': " ++ s) >> repl env
+          ErrM.Ok (SPrint e) -> (outputStrLn (show $ eval env e)) >> repl env
+          ErrM.Bad s -> (outputStrLn $ "Parsing error: " ++ s) >> repl env
+        Expr expr -> (printExp env expr) >> repl env
+        Type t    -> (printType t) >> repl env
+
+--    repl Map.empty
