@@ -6,10 +6,10 @@ import Data.List (isPrefixOf)
 import Control.Monad.Trans
 import System.Console.Haskeline
 
-import AbsL
-import ParL (pExp, pStm, pLType)
-import LexL (tokens, Token)
-import qualified ErrM
+import Lang.Abs
+import Lang.Par (pParExp, pParStm, pParLType)
+import Lang.Lex (tokens, Token)
+import qualified Lang.ErrM as ErrM
 
 type Ident = String
 type Environment = Map.Map Ident Integer
@@ -32,7 +32,7 @@ instance Num Result where
   signum (Error s) = Error $ "can't `signum`: " ++ s
   fromInteger = Ok
 
-eval :: Environment -> Exp -> Result
+eval :: Environment -> ParExp -> Result
 eval env (EAdd a b ) = eval env a + eval env b
 eval env (ESub a b ) = eval env a - eval env b
 eval env (EMul a b ) = eval env a * eval env b
@@ -51,9 +51,9 @@ eval env (EVar (PIdent ((p1,p2),ident))) = case Map.lookup ident env of
  --                          Ok x -> 
 eval _ _ = Error "Not implemented operation."
 
-parseExp = pExp . tokens
-parseStm = pStm . tokens
-parseType = pLType . tokens
+parseExp = pParExp . tokens
+parseStm = pParStm . tokens
+parseType = pParLType . tokens
 
 data ReplCommand = Statement String | Expr String | Type String
 

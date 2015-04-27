@@ -1,8 +1,10 @@
-all: L.cf
-	bnfc $^
-	happy -gca ParL.y
-	alex -g LexL.x
-	ghc --make TestL.hs -o TestL
+PDIR=Lang
+all: $(PDIR)/Lang.cf
+	bnfc -d $^
+	cd $(PDIR) ; \
+		happy -gca Par.y ; \
+		alex -g Lex.x
+	ghc --make $(PDIR)/Test.hs -o Test
 
 clean:
 	-rm -f *.log *.aux *.hi *.o *.dvi
@@ -14,11 +16,13 @@ repl : repl.hs all
 runrepl : repl
 	./repl
 
-debug :
-	bnfc L.cf
-	happy -da ParL.y
-	alex -g LexL.x
-	ghc --make repl.hs
+debug : $(PDIR)/Lang.cf
+	bnfc -d $^
+	cd $(PDIR)
+	happy -da Par.y # -d for debug
+	alex -g Lex.x
+	cd ..
+	ghc  --make repl.hs
 
 # distclean: clean
 # 	-rm -f DocL.* LexL.* ParL.* LayoutL.* SkelL.* PrintL.* TestL.* AbsL.* TestL ErrM.* SharedString.* ComposOp.* L.dtd XMLL.* Makefile*
