@@ -69,7 +69,7 @@ myerror :: String -> String
 myerror = (++) "Error: "
 --printExp :: Environment -> String -> IO ()
 printExp env s = outputStrLn $ case parseExp s of
-  ErrM.Ok e  -> s ++ " = " ++ (show $ eval env e)
+  ErrM.Ok e  -> s ++ " = " ++ (show $ eval env e) ++ "\n" ++ (show e)
   ErrM.Bad s -> myerror s
 
 -- printType :: String -> IO ()

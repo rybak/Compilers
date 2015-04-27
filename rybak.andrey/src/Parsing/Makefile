@@ -1,18 +1,12 @@
-
-all : LexL.hs ParL.hs
-
-ParL.hs : ParL.y
-	happy $^
-
-LexL.hs : LexL.x
-	alex $^
-
-ParL.y : L.cf
+all: L.cf
 	bnfc $^
+	happy -gca ParL.y
+	alex -g LexL.x
+	ghc --make TestL.hs -o TestL
 
-LexL.x : ParL.y
-	echo "Doing nothing for LexL.x. Depends on\n\t$^"
-
+clean:
+	-rm -f *.log *.aux *.hi *.o *.dvi
+	-rm -f DocL.ps
 
 repl : repl.hs all
 	ghc repl.hs
@@ -20,7 +14,13 @@ repl : repl.hs all
 runrepl : repl
 	./repl
 
-clean :
-	rm -f *.bak
-	rm -f ParL.y LexL.x ParL.hs LexL.hs
-	rm -f ErrM.hs AbsL.hs DocL.txt PrintL.hs SkelL.hs TestL.hs
+debug :
+	bnfc L.cf
+	happy -da ParL.y
+	alex -g LexL.x
+	ghc --make repl.hs
+
+# distclean: clean
+# 	-rm -f DocL.* LexL.* ParL.* LayoutL.* SkelL.* PrintL.* TestL.* AbsL.* TestL ErrM.* SharedString.* ComposOp.* L.dtd XMLL.* Makefile*
+# 	
+
