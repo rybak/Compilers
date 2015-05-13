@@ -1,7 +1,7 @@
--- Prog. Program ::= [ParDecl] ;
--- DVar. ParDecl ::= [PIdent] ":" ParLType ;
--- DFuncDecl. ParDecl ::= "def" PIdent ":" ParLType ;
--- DFuncDef. ParDecl ::= PIdent "(" [PIdent] ")" "{" [ParStm] "}" ;
+Prog. ParProgram ::= [ParDecl] ;
+DVar. ParDecl ::= [PIdent] ":" ParLType ;
+DFuncDecl. ParDecl ::= "def" PIdent ":" ParLType ;
+DFuncDef. ParDecl ::= PIdent "(" [PIdent] ")" "{" [ParStm] "}" ;
 TVoid. ParLType2 ::= "void" ;
 TInt. ParLType2 ::= "int" ;
 TFunType. ParLType1 ::= ParLType2 "->" ParLType1 ;
