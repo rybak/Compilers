@@ -1,19 +1,17 @@
-Prog. ParProgram ::= [ParDecl] ;
-DVar. ParDecl ::= [PIdent] ":" ParLType ;
-DFuncDecl. ParDecl ::= "def" PIdent ":" ParLType ;
-DFuncDef. ParDecl ::= PIdent "(" [PIdent] ")" "{" [ParStm] "}" ;
-TVoid. ParLType2 ::= "void" ;
-TInt. ParLType2 ::= "int" ;
-TFunType. ParLType1 ::= ParLType2 "->" ParLType1 ;
-coercions ParLType 2 ;
+Prog. ParProgram ::= [ParTopLevel] ;
+Decl. ParTopLevel ::= [PIdent] ":" ParLType ;
+FuncDef. ParTopLevel ::= PIdent "(" [PIdent] ")" "{" [ParStm] "}" ;
+separator  nonempty PIdent "," ;
 
--- SFunDecl. ParStm ::= PIdent ":" ParLType ;
+TVoid.      ParLType ::= "void" ;
+TInt.       ParLType ::= "int" ;
+TFunType.   ParLType ::= "(" [ParLType] ")" "->" ParLType ;
+separator   ParLType " " ;
 
--- SVarDecl . ParStm ::= ParLType [PIdent] ;
--- separator  nonempty PIdent "," ;
 
-SAss.    ParStm  ::= PIdent "=" ParExp ;
-SPrint.  ParStm  ::= "print" ParExp;
+SAss.    ParStm ::= PIdent "=" ParExp ;
+SPrint.  ParStm ::= "print" ParExp;
+SExp.    ParStm ::= ParExp ;
 
 -- EOr.     ParExp1 ::= ParExp1 "||" ParExp2 ;
 -- EAnd.    ParExp2 ::= ParExp2 "&&" ParExp3 ;
