@@ -91,6 +91,7 @@ main = runInputT defaultSettings (repl Map.empty) where
             Ok n -> repl (Map.insert (varName v) n env)
             Error s -> (outputStrLn $ "Can't assign '" ++ (varName v) ++ "': " ++ s) >> repl env
           ErrM.Ok (SPrint e) -> (outputStrLn (show $ eval env e)) >> repl env
+          ErrM.Ok x          -> (outputStrLn ("not supported : " ++ show x)) >> repl env
           ErrM.Bad s -> (outputStrLn $ "Parsing error: " ++ s) >> repl env
         Expr expr -> (printExp env expr) >> repl env
         Type t    -> (printType t) >> repl env
