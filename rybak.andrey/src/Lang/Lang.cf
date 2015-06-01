@@ -1,40 +1,57 @@
-Prog. ParProgram ::= [ParTopLevel] ;
-Decl. ParTopLevel ::= [PIdent] ":" ParLType ;
-FuncDef. ParTopLevel ::= PIdent "(" [PIdent] ")" "{" [ParStm] "}" ;
-separator  nonempty PIdent "," ;
+comment "//" ;
+comment "/*" "*/" ;
 
+Prog. ParProgram ::= [ParTopLevel] ;
+terminator ParTopLevel "" ;
+
+Decl.    ParTopLevel ::= Decl ;
+FuncDef. ParTopLevel ::= PIdent "(" [PIdent] ")" Block ;
+separator PIdent "," ;
+
+Dec. Decl ::= PIdent ":" ParLType ;
 TVoid.      ParLType ::= "void" ;
 TInt.       ParLType ::= "int" ;
+TBool.      ParLType ::= "bool" ;
 TFunType.   ParLType ::= "(" [ParLType] ")" "->" ParLType ;
-separator   ParLType " " ;
+separator ParLType "," ;
 
+Cal. Call ::= PIdent "(" [ParExp] ")" ;
+separator ParExp "," ;
+BlockB. Block ::= "{" [ParStm] "}" ;
+terminator ParStm "" ;
 
-SAss.    ParStm ::= PIdent "=" ParExp ;
-SPrint.  ParStm ::= "print" ParExp;
-SExp.    ParStm ::= ParExp ;
+SBlock.         ParStm ::= Block ;
+SDecl.          ParStm ::= Decl ";" ;
+SAss.           ParStm ::= PIdent "=" ParExp ";" ;
+SCall.          ParStm ::= Call ";" ;
+SVoidReturn.    ParStm ::= "return;" ;
+SReturn.        ParStm ::= "return" ParExp ";" ;
 
--- EOr.     ParExp1 ::= ParExp1 "||" ParExp2 ;
--- EAnd.    ParExp2 ::= ParExp2 "&&" ParExp3 ;
--- EEq.     ParExp3 ::= ParExp3 "==" ParExp4 ;
--- ENeq.    ParExp3 ::= ParExp3 "!=" ParExp4 ;
--- ELt.     ParExp4 ::= ParExp4 "<"  ParExp5 ;
--- EGt.     ParExp4 ::= ParExp4 ">"  ParExp5 ;
--- ELtE.    ParExp4 ::= ParExp4 "<=" ParExp5 ;
--- EGtE.    ParExp4 ::= ParExp4 ">=" ParExp5 ;
+SPrint.  ParStm ::= "print" ParExp ";" ;
+
+-- EBoolOr.     ParExp1 ::= ParExp1 "||" ParExp2 ;
+-- EBoolAnd.    ParExp2 ::= ParExp2 "&&" ParExp3 ;
+-- EEq.         ParExp3 ::= ParExp3 "==" ParExp4 ;
+-- ENotEq.      ParExp3 ::= ParExp3 "!=" ParExp4 ;
+-- ELt.         ParExp4 ::= ParExp4 "<"  ParExp5 ;
+-- EGt.         ParExp4 ::= ParExp4 ">"  ParExp5 ;
+-- ELtE.        ParExp4 ::= ParExp4 "<=" ParExp5 ;
+-- EGtE.        ParExp4 ::= ParExp4 ">=" ParExp5 ;
+-- EBoolNot.    ParExp7 ::= "!" ParExp6 ;
 EAdd.    ParExp5 ::= ParExp5 "+" ParExp6 ;
 ESub.    ParExp5 ::= ParExp5 "-" ParExp6 ;
 EMul.    ParExp6 ::= ParExp6 "*" ParExp7 ;
 EDiv.    ParExp6 ::= ParExp6 "/" ParExp7 ;
--- ENeg.    ParExp7 ::= "!" ParExp6 ;
 ENegInt. ParExp7 ::= "-" ParExp6 ;
--- ECall.   ParExp8 ::= PIdent  "(" [ParExp] ")" ;
+ECall.   ParExp8 ::= Call ;
 EVar.    ParExp8 ::= PIdent ;
 EInt.    ParExp8 ::= Integer ;
--- EBool.   ParExp8 ::= BoolT ;
+EBool.   ParExp8 ::= BoolT ;
 
-terminator ParExp "";
+ETrue. BoolT ::= "True";
+EFalse. BoolT ::= "False";
+
 coercions ParExp 8 ;
-terminator ParStm ";";
 
 position token PIdent (letter | '_' ) (letter | digit | '_' )* ;
 -- position token 

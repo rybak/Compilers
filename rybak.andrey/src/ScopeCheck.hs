@@ -35,6 +35,7 @@ checkScope prog = let
   in
     snd $ runState (buildSTProgram prog) buildStGlobal
 
+-- SM helper functions
 getMainFound :: SM BuildSt Bool 
 getMainFound = SM (\st -> (mainFound st,st))
 
@@ -90,5 +91,60 @@ getSyms = SM (\st -> (syms st,st))
 
 setSyms :: SymTab -> SM BuildSt ()
 setSyms symtab = SM (\st -> ((), St (mainFound st) symtab (scope st) (counter st) (errs st) ))
+
+-- helper for building error messages:
+getErrorStringCoords :: PIdent -> String
+getErrorStringCoords (PIdent ((x,y),name)) = name ++ " at line " ++ showx ++ " col " ++ show y
+--
+
+-- Collect global symbols
+collectGlobal :: ParProgram -> Result
+collectGlobal (Prog topLvls) = collectGlobalFuns topLvls
+
+collectGlobalFuns :: [ParTopLevel] -> Result
+collectGlobalFuns [] = return ()
+collectGlobalFuns (t:ts) do
+  collectGlobalFun t
+  collectGlobalFuns ts
+
+mainFunctionName :: String
+mainFunctionName = "main"
+mainFunctionType :: ParLType
+mainFunctionType = TFunType [] TVoid
+isMainFunction :: PIdent -> Bool
+isMainFunction name = (nameToString name == mainFunctionName)
+
+duplicateError :: PIdent -> SM BuildSt ()
+duplicateError name = addToErrs ("duplicate declared : " ++ getErrorStringCoords name)
+wrongDefError :: PIdent -> ParLType -> SM BuildSt ()
+wrongDefError name typ = addToErrs ("Definition doesn't meet type : " ++ getErrorStringCoords name ++ " should be " ++ show typ)
+
+collectGlobalFun :: ParTopLevel -> Result
+collectGlobalFun (Decl name typ') =
+  case (isMainFunction name) of
+    True -> case (typ' == mainFunctionType) of
+      False -> do
+        addToErrs ("main must be of type " ++ show mainFunctionType ++ " : " ++ (getErrorStringLoc name))
+        return ()
+      True  -> do -- main function is void, adding to symtab
+        let stKind = STFun (nameToString name) [] TVoid
+        added <- addSymCurScope stKind
+        when (isNothing added) (duplicateError name)
+        return ()
+    False -> case typ' of
+      TFunType argsTypes retType -> undefined -- TODO
+      _ -> -- add? global variable
+
+      return () -- TODO
+collectGlobalFun (FuncDef name args body) =
+  case (isMainFunction name) of
+    True -> case args of
+      [] -> do -- ok
+        setMainFound True
+        return ()
+      _  -> do
+        wrongDefError name mainFunctionType
+        return ()
+  
 
 
