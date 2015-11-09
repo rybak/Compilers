@@ -4,11 +4,12 @@ comment "/*" "*/" ;
 Prog. ParProgram ::= [ParTopLevel] ;
 terminator ParTopLevel "" ;
 
-Decl.    ParTopLevel ::= Decl ;
-FuncDef. ParTopLevel ::= PIdent "(" [PIdent] ")" Block ;
-separator PIdent "," ;
+TopDecl. ParTopLevel ::= Decl ;
+FuncDef. ParTopLevel ::= PIdent "(" [Decl] ")" "->" ParLType Block ;
+separator Decl "," ;
 
 Dec. Decl ::= PIdent ":" ParLType ;
+
 TVoid.      ParLType ::= "void" ;
 TInt.       ParLType ::= "int" ;
 TBool.      ParLType ::= "bool" ;
@@ -17,6 +18,7 @@ separator ParLType "," ;
 
 Cal. Call ::= PIdent "(" [ParExp] ")" ;
 separator ParExp "," ;
+
 BlockB. Block ::= "{" [ParStm] "}" ;
 terminator ParStm "" ;
 
