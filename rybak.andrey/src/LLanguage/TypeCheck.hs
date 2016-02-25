@@ -67,6 +67,24 @@ typeStm (Assign pi exp) = do
         _ -> do
             addToErrs $ "Look for scope errors about " ++ showPI pi
             return $ AAssign pi aexp
+typeStm (SRet exp) = do
+    aexp <- typeExp exp
+    scope@(fn, _) <- getScope
+    setScope globalScope
+    funIn <- lookupSymCurScope fun
+    setScope scope
+    case (getAExp aexp, funIn) of
+        (Just et, Just (STFun n ft)) ->
+            checkTypesEqual (returnType ft) et 
+typeStm SVoidRet = do
+    scope@(fn, _) <- getScope
+    setScope globalScope
+    funIn <- lookupSymCurScope fun
+    setScope scope
+    case funIn of
+        (Just (STFun n ft)) ->
+            checkTypesEqual (returnType ft) TVoid 
+
 
 getAExp :: AExp x -> x
 getAExp (AIntLit _ x) = x

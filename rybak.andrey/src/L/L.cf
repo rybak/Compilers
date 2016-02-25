@@ -20,6 +20,7 @@ terminator ParStm "" ;
 -- 
 SDecl. ParStm ::= Decl ";" ;
 Assign.  ParStm ::= PIdent "=" ParExp ";" ;
+SRet. ParStm ::= "return" ParExp ";" ;
 
 IntLit. ParExp ::= Integer ;
 EVar. ParExp ::= PIdent ;
