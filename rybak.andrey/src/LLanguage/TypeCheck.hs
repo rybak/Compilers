@@ -76,11 +76,14 @@ typeStm (SRet exp) = do
     case (getAExp aexp, funIn) of
         (Just et, Just (STFun n ft)) ->
             checkTypesEqual (returnType ft) et 
+            return ASRe
 typeStm SVoidRet = do
     scope@(fn, _) <- getScope
     setScope globalScope
     funIn <- lookupSymCurScope fun
+    -- CURSOR HERE
     setScope scope
+    -- CURSOR HERE
     case funIn of
         (Just (STFun n ft)) ->
             checkTypesEqual (returnType ft) TVoid 
