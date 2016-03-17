@@ -43,7 +43,6 @@ type CGSymTab = [(String, Operand)]
 data CodegenState = CodegenState {
     currentBlock :: Name,
     blocks :: M.Map Name BlockState,
-    symtab :: CGSymTab,
     blockCount :: Int,
     count :: Word,
     names :: Names
@@ -65,10 +64,8 @@ codegenTop (ATopFun pi args rt body) = do
         bb = createBlocks $ execCodegen $ do
             entry <- addBlock entryBlockName
             setBlock entry
-            forM args $ \a@(ADec pi t) -> do
-                var <- alloca t
-                store t var (local (compileName pi) t)
-                assign (pIdentToString pi) var
+            -- Args need to be a la constants
+            -- TODO add special args field
             codegenFunctionBody body
             return ()
 codegenTop (ATopDecl (ADec pi t)) = addDefinition $ compileGlobalVar pi t
@@ -96,10 +93,9 @@ codegenFunctionBody (ABlockB astms) = do
 
 codegenStm :: AStm (Maybe ParLType) -> Codegen ()
 codegenStm (ASDecl (ADec pi t)) = do
-    i <- alloca t
+    var <- allocaNamed (pIdentToString pi) t
     let val = constInt 0 -- TODO add other types
-    store t i val
-    assign (pIdentToString pi) i
+    store t var val
 codegenStm (ARet (Just e)) = do
     o <- codegenExp e
     ret (Just o)
@@ -111,9 +107,8 @@ codegenStm (ARet Nothing) = do
 codegenStm (AAssign pi e) = do
     maybe (internalError $ "no type : " ++ show e)
         (\t -> do
-            i <- alloca t
-            codegenExp e >>= store t i
-            assign (pIdentToString pi) i
+            let var = getVariable pi t
+            codegenExp e >>= store t var
         )
         (getType e)
     return ()
@@ -122,7 +117,7 @@ codegenStm _ = return ()
 constInt n = ConstantOperand $ C.Int 32 n
 codegenExp :: AExp (Maybe ParLType) -> Codegen Operand
 codegenExp (AIntLit n) = return $ constInt n
-codegenExp (AEVar pi (Just t)) = getvar pi >>= load t
+codegenExp (AEVar pi (Just t)) = getvar pi t >>= load t
 codegenExp (AEVar pi Nothing) = internalError $ "Caught variable without type : " ++ showPI pi
 codegenExp (AEFun pi mt) = undefined
 
@@ -141,6 +136,19 @@ instr t i = do
     let s = stack b
     modifyBlock (b { stack = s ++ [ref := i] } )
     return $ local ref t
+-- TODO add type
+unnamedInstr t i = do
+    n <- fresh
+    let ref = (UnName n)
+    newInstr ref t i
+-- TODO add type
+namedInstr x t i = newInstr (Name x) t i
+-- TODO add type
+newInstr ref t i = do
+    b <- current
+    let s = stack b
+    modifyBlock (b { stack = s ++ [ref := i] } )
+    return $ local ref t
 terminator :: Named Terminator -> Codegen (Named Terminator)
 terminator t = do
     b <- current
@@ -154,12 +162,19 @@ current = do
         Just x -> return x
         Nothing -> internalError $ "no such block : " ++ show b
 
+-- TODO remove redundant code
 alloca :: ParLType -> Codegen Operand
 alloca t = instr t $ Alloca llt Nothing 0 [] where
     llt = compileType t
 
-store :: ParLType -> Operand -> Operand -> Codegen Operand
-store t ptr val = instr t $ Store False ptr val Nothing 0 []
+-- TODO add type
+allocaNamed varName t = namedInstr varName t $ Alloca llt Nothing 0 [] where
+    llt = compileType t
+
+store :: ParLType -> Operand -> Operand -> Codegen ()
+store t ptr val = do
+    instr t $ Store False ptr val Nothing 0 []
+    return ()
 
 load :: ParLType -> Operand -> Codegen Operand
 load t ptr = instr t $ Load False ptr Nothing 0 []
@@ -177,17 +192,14 @@ uniqueName name names = maybe
         (name ++ show newIndex, M.insert name newIndex names))
     (M.lookup name names)
 
--- symtab
-assign :: String -> Operand -> Codegen ()
-assign var x = do
-    localVars <- gets symtab
-    modify $ \s -> s { symtab = [(var, x)] ++ localVars }
-getvar :: PIdent -> Codegen Operand
-getvar pi = do
-    st <- gets symtab
-    case lookup (pIdentToString pi) st of
-        Just x -> return x
-        Nothing -> internalError $ "Local var not in scope: " ++ showPI pi
+-- only handle regular local variables now
+-- TODO : need to add pointers to functions
+-- TODO : add special treatment of function arguments
+-- getvat needs to be a "Codegen" function to be able to get into Codegen state
+getvar :: PIdent -> ParLType -> Codegen Operand
+getvar pi t = return $ local (Name (pIdentToString pi)) t
+getVariable pi t = local (Name $ pIdentToString pi) t
+
 -- refs
 local :: Name -> ParLType -> Operand
 local n t = LocalReference (compileType t) n
@@ -257,7 +269,7 @@ modifyBlock new = do
   modify $ \s -> s { blocks = M.insert active new (blocks s) }
 -- CodegenState
 emptyCodegen :: CodegenState
-emptyCodegen = CodegenState (Name entryBlockName) M.empty [] 1 0 M.empty
+emptyCodegen = CodegenState (Name entryBlockName) M.empty 1 0 M.empty
 execCodegen :: Codegen a -> CodegenState
 execCodegen cg = execState (runCodegen cg) emptyCodegen
 
