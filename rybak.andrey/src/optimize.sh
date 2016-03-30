@@ -1,3 +1,13 @@
+#!/bin/bash
 
+source setup.sh
 
-llvm-as-3.5 < "${1}.ll" | opt-3.5 -mem2reg | llvm-dis-3.5 > "${1}-optimized.ll"
+FILENAME=${1}
+shift
+
+# compile llvm code into bitcode
+llvm-as-${LLVM_VERSION} <"${FILENAME}.ll" \
+# optimize llvm registers
+    | opt-${LLVM_VERSION} -mem2reg \
+# disassemble back to llvm code to check the optimization
+    | llvm-dis-${LLVM_VERSION} >"${FILENAME}-optimized.ll"
